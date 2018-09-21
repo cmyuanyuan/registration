@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统 查看药方项</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<form name="f" id="f" method="post">
+  <input type="hidden" id="cid">
+  <input type="hidden" id="prid">
+
+  <div class="page-container">
+    <div class="cl pd-5 bg-1 bk-gray mt-20">
+      <span class="l">&nbsp; &nbsp;病人姓名:<strong style="color: blue;" id="pname"></strong></span>
+      <span class="r">此药方合计:<strong style="color: red;"><span id="totalPrice">
+      </span></strong> 元&nbsp; &nbsp;</span></div>
+
+    <div class="mt-20">
+      <table class="table table-border table-bordered table-hover table-bg  table-sort">
+        <thead>
+        <tr class="text-c">
+          <th width="40">序号</th>
+          <th width="80">药品名字</th>
+          <th width="100">药品价格</th>
+          <th width="90">药品数量</th>
+          <th width="100">小计价格</th>
+          <th width="80">操作</th>
+        </tr>
+        </thead>
+        <tfoot>
+        <tr class="text-c">
+          <th width="40">序号</th>
+          <th width="80">药品名字</th>
+          <th width="100">药品价格</th>
+          <th width="90">药品数量</th>
+          <th width="100">小计价格</th>
+          <th width="80">操作</th>
+        </tr>
+        </tfoot>
+        <tbody>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div><p> &nbsp;</p></div>
+  <div align="center">
+    <button onClick="layer_close();" class="btn btn-primary size-L radius" type="button"> 确定&nbsp;</button>
+    <!-- <button type="submit"  class="btn btn-primary size-L radius "> 保存</button> --></div>
+</form>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/WdatePicker/WdatePicker.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+
+<script src="../js/jquery.validation/jquery.validate.js"></script>
+<script src="../js/jquery.validation/validate-methods.js"></script>
+<script src="../js/jquery.validation/messages_zh.js"></script>
+<script src="../js/hospital.js"></script>
+<script>
+  $(window).on('load', () => {
+    var pname = localStorage.getItem("pname")
+    var cid = localStorage.getItem("cardscid")
+    var prid = localStorage.getItem("prid")
+    //localStorage.removeItem("pname")
+    //localStorage.removeItem("cardscid")
+    //localStorage.removeItem("prid")
+
+    $("#pname").html(pname)
+    $("#cid").val(cid)
+    $("#prid").val(prid)
+
+    $.ajax({
+      type: 'get',
+      url: HOST_URL + 'doctorvisfindprescription/' + prid,
+      headers: createAuthorizationTokenHeader(),
+      dataType: 'json',
+      success: function (data) {
+        var text = ``
+        var totalPrice = 0;
+        // 循环结果集中的 map,累加购物项集合每个购物项的小计价格
+
+        $.each(data, (i, item) => {
+          i += 1
+          text += `
+          <tr class="text-c" id="tr${item.drug.drid }">
+            <td>${i}</td>
+            <td> ${item.drug.drname}</td>
+            <td>
+              ${item.drug.drprice }
+              <input name="price" type="hidden" value="${item.drug.drprice}" >
+            </td>
+            <td>
+              <input onblur="updatePrescripton(${item.drug.drid},${item.drnum },${item.drug.drid },${item.drug.drprice })"
+                     type="number" class="input-text" step="1"
+                     name="sun" min="1" id="${item.drug.drid}" value="${item.drnum }" style="width: 60px">
+            </td>
+            <td>
+              <span id="xiao${item.drug.drid}">
+                ${item.sum }
+              </span>
+           </td>
+            <td>
+              <a href="javascript:removePrescripton(${item.drug.drid },${item.drug.drid})"
+                 class="btn btn-primary radius"> 移除此药品</a>
+            </td>
+          </tr>
+          `
+
+          totalPrice += item.drnum * item.sum;
+        })
+
+        $("tbody").append(text)
+        $("#totalPrice").html(totalPrice)
+
+        $('.table-sort').DataTable({
+          language: {
+            url: "../js/zh_CN.txt"
+          },
+          retrieve: true, // Cannot reinitialise DataTable
+        })
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.log("Spring exception:", jqXHR.responseJSON.exception)
+        layer.alert("系统出现错误，请联系管理员");
+      },
+    })
+  })
+
+  /**
+   * 修改药方项
+   * @param xid
+   * @param sum
+   * @param drid
+   * @param price
+   */
+  function updatePrescripton(xid, sum, drid, price) {
+    var prid = $("#prid").val()
+
+    var sums = $("#xid").val();
+    if (sums == 0) {
+      layer.alert("最小值为 1");
+    }
+    if (sums != sum) {
+      $.ajax({
+        type: 'post',
+        url: HOST_URL + 'doctorvisupdateprescripton',
+        data: {"drid": drid, "prid": prid, "nun": sums},
+        headers: createAuthorizationTokenHeader(),
+        success: function (data) {
+          if (data.result == 1) {
+            var chajia = (sums - sum) * (price * 10) / 10;
+            $("#xiao" + xid).html((sums * (price * 10) / 10).toFixed(1))
+            var totalPrice = $("#totalPrice").html();
+            var sum1 = (parseFloat(totalPrice) * 10 + chajia * 10) / 10;
+            $("#totalPrice").html(sum1.toFixed(1));
+          }
+        }
+      });
+    }
+  }
+
+  /**
+   * 删除药方项
+   * @param xid
+   * @param drid
+   */
+  function removePrescripton(xid, drid) {
+    var prid = $("#prid").val()
+    layer.confirm('确认要移除本药品吗?', function (index) {
+      layer.closeAll('dialog');
+      $.ajax({
+        type: 'post',
+        url: HOST_URL + 'doctorvisremoveprescripton',
+        data: {"drid": drid, "prid": prid},
+        headers: createAuthorizationTokenHeader(),
+        success: function (data) {
+          if (data.result == 1) {
+            var totalPrice = $("#totalPrice").html();
+            var subPrice = $("#xiao" + xid).html();
+            $("#totalPrice").html(totalPrice - subPrice);
+            $("#tr" + xid).remove();
+          }
+        }
+      });
+    })
+  }
+</script>
+</body>
+</html>

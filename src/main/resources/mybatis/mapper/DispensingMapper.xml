@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @author SONG  -->
+<mapper namespace="com.hospital.registration.mapper.DispensingMapper">
+  <!-- 今天要过来的取药的人  -->
+  <resultMap type="com.hospital.registration.domain.Prescripton" id="Prescripton">
+    <id column="prid" property="prid"/>
+    <result column="drstate" property="drstate"/>
+
+    <association property="cards" javaType="com.hospital.registration.domain.Cards">
+      <id column="cid" property="cid"/>
+      <result column="pname" property="pname"/>
+      <result column="ramaining" property="ramaining"/>
+      <result column="gender" property="gender"/>
+      <result column="phone" property="phone"/>
+    </association>
+
+    <association property="doctors" javaType="com.hospital.registration.domain.Doctors">
+      <result column="doid" property="doid"/>
+      <result column="doname" property="doname"/>
+    </association>
+
+  </resultMap>
+  <select id="listPrescripton" resultMap="Prescripton">
+    select p.prid,c.cid,d.doid,c.pname,c.ramaining,c.gender,c.phone,d.doname,p.drstate
+    from prescripton p ,	cards c ,doctors d
+    where p.cid=c.cid and p.doid=d.doid  and  p.drstate=1	and to_days(prdate) = to_days(now())
+	</select>
+</mapper>

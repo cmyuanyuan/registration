@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统 病人病历</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb"><i class="Hui-iconfont">&#xe67f;</i> 首页 <span class="c-gray en">&gt;</span> 门诊业务 <span
+        class="c-gray en">&gt;</span> 就医诊断 <span class="c-gray en">&gt;</span> 病人病历<a class="btn btn-success radius r"
+                                                                                      style="line-height:1.6em;margin-top:3px"
+                                                                                      href="javascript:;"
+                                                                                      title="刷新"><i
+        class="Hui-iconfont">&#xe68f;</i></a></nav>
+<div class="page-container">
+  <div class="text-c">
+    <h3 id="clock"></h3>
+    日期范围: <input type="date" id="beginDate" name="beginDate" class="input-text" style="width:140px">
+    <input type="date" id="endDate" name="endDate" class="input-text" style="width:140px">
+    <input type="hidden" id="cid">
+
+    <a class="btn btn-success radius" href="javascript:searchDate()"><i class="Hui-iconfont">&#xe665;</i> 搜索</a>
+
+  </div>
+  <div class="cl pd-5 bg-1 bk-gray mt-20">
+<span class="l">
+
+</span> <span class="r"><strong></strong> </span>
+  </div>
+  <div class="mt-20">
+    <table class="table table-border table-bordered table-hover table-bg table-sort">
+      <thead>
+      <tr class="text-c">
+        <th width="40">主治医生</th>
+        <th width="80">病人姓名</th>
+        <th width="40">病人性别</th>
+        <th width="90">医生职位</th>
+        <th width="80">病历状况</th>
+        <th width="170">处理方案</th>
+        <th width="100">就医时间</th>
+        <th width="100">查看药方</th>
+      </tr>
+      </thead>
+      <tfoot>
+      <tr class="text-c">
+        <th width="40">主治医生</th>
+        <th width="80">病人姓名</th>
+        <th width="40">病人性别</th>
+        <th width="90">医生职位</th>
+        <th width="80">病历状况</th>
+        <th width="170">处理方案</th>
+        <th width="100">就医时间</th>
+        <th width="100">查看药方</th>
+      </tr>
+      </tfoot>
+      <tbody>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/WdatePicker/WdatePicker.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+<script src="../js/hospital.js"></script>
+<script>
+  $(window).on('load', () => {
+    var cid = localStorage.getItem("cid")
+    localStorage.removeItem("cid")
+
+    $("#cid").val(cid)
+
+    loadHistory(cid, "", "")
+  })
+
+  function searchDate() {
+    loadHistory($("#cid").val(), $("#beginDate").val(), $("#endDate").val())
+  }
+
+  function loadHistory(cid, beginDate, endDate) {
+    var data = {}
+    if (beginDate.length > 0 && endDate.length > 0) {
+      data = {beginDate: beginDate, endDate: endDate}
+    }
+    $.ajax({
+      url: HOST_URL + "doctorvishistory/" + cid,
+      type: "GET",
+      data: data,
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data, textStatus, jqXHR) {
+        console.log("history", data)
+
+        var text = ``
+        $.each(data, (i, item) => {
+          var deal = "回家观察" // 1
+          if (item.deal == 2) {
+            deal = "开药观察"
+          } else if (item.deal == 3) {
+            deal = "住院观察"
+          }
+
+          text += `
+          <tr class="text-c">
+            <td>${item.doctors.doname}</td>
+            <td>
+              ${item.cards.pname}
+            </td>
+            <td>${item.cards.gender}</td>
+            <td>${item.doctors.title}</td>
+            <td>${deal}</td>
+            <td>
+              ${item.brief }
+            </td>
+            <td class="td-status">
+              ${item.hidate }
+            </td>
+            <td class="td-manage">
+              <a href="javascript:findDrug('${item.cards.pname}-药方信息','drugprs.html',${item.prescripton.prid},800,500)"
+                 class="btn btn-primary radius"> <i class="Hui-iconfont">&#xe665;</i>查看药方</a>
+            </td>
+          </tr>
+          `
+        })
+        $("tbody").append(text)
+
+        $('.table-sort').DataTable({
+          language: {
+            url: "../js/zh_CN.txt"
+          },
+          retrieve: true, // Cannot reinitialise DataTable
+        })
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.log("Spring exception:", jqXHR.responseJSON.exception)
+        layer.alert("系统出现错误，请联系管理员");
+      }
+    })
+  }
+
+  /*查看药方*/
+  function findDrug(title, url, prid, w, h) {
+    localStorage.setItem("prid", prid)
+    layer_show(title, url, w, h);
+  }
+</script>
+</body>
+</html>

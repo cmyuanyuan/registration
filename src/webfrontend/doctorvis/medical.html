@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统 诊疗方案</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb"><i class="Hui-iconfont">&#xe67f;</i> 首页
+  <span class="c-gray en">&gt;</span>
+  门诊业务
+  <span class="c-gray en">&gt;</span>
+  就医诊断
+  <span class="c-gray en">&gt;</span>
+  诊疗方案
+  <a class="btn btn-success radius r" style="line-height:1.6em;margin-top:3px"
+     href="javascript:location.replace(location.href);" title="刷新"><i class="Hui-iconfont">&#xe68f;</i></a>
+</nav>
+<div class="page-container">
+  <form class="form form-horizontal" id="form-article-add">
+    <div id="tab-system" class="HuiTab">
+      <div class="tabBar cl">
+        <span>基本设置</span>
+      </div>
+      <div class="tabCon">
+        <div class="row cl">
+          <label class="form-label col-xs-4 col-sm-2">
+            诊疗卡号:</label>
+          <div class="formControls col-xs-8 col-sm-9" id="cardscid">
+
+          </div>
+        </div>
+        <div class="row cl">
+          <label class="form-label col-xs-4 col-sm-2">
+            病人姓名:</label>
+          <div class="formControls col-xs-8 col-sm-9" id="cardspname">
+
+          </div>
+        </div>
+        <div class="row cl">
+          <label class="form-label col-xs-4 col-sm-2">
+            性别:</label>
+          <div class="formControls col-xs-8 col-sm-9" id="cardsgender">
+
+          </div>
+        </div>
+        <div class="row cl">
+          <label class="form-label col-xs-4 col-sm-2">
+            身份证:</label>
+          <div class="formControls col-xs-8 col-sm-9" id="cardsidcard">
+          </div>
+        </div>
+
+        <div class="row cl">
+          <label class="form-label col-xs-4 col-sm-2"><span class="c-red">*</span>诊断结论:</label>
+          <div class="formControls col-xs-8 col-sm-9">
+            <textarea class="textarea" id="brief" name="brief" placeholder="不少于4个字符,不多于400个字符."
+                      style="width: 620px; height: 220px"></textarea>
+          </div>
+        </div>
+
+        <div class="row cl">
+          <label class="form-label col-xs-4 col-sm-2"><span class="c-red">*</span>诊疗方式:</label>
+          <div class="formControls col-xs-8 col-sm-9 skin-minimal">
+            <div class="radio-box">
+              <input name="deal" type="radio" id="deal1" value="1" checked>
+              <label for="deal1">回家观察</label>
+            </div>
+            <div class="radio-box">
+              <input name="deal" type="radio" id="deal2" value="2">
+              <label for="deal2">开药治疗</label>
+            </div>
+            <div class="radio-box">
+              <input name="deal" type="radio" id="deal3" value="3">
+              <label for="deal3">办理住院</label>
+              <input type="hidden" id="doid" name="doid">
+              <input type="hidden" id="cid" name="cid">
+              <input type="hidden" id="rid" name="rid">
+              <input type="hidden" id="by2" name="by2">
+            </div>
+            <span>
+						<a id="btn1" onClick="javascript:addpres('药信息','addpres.html','800','500')"><i
+                    class="Hui-iconfont">&#xe647;</i> 开药</a> &nbsp;
+						<a id="btn2" onClick="javascript:findPrescription('药方信息','prescription.html','800','525')"><i
+                    class="Hui-iconfont">&#xe695;</i> 查看药方</a>
+						</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row cl">
+      <div class="col-xs-8 col-sm-9 col-xs-offset-4 col-sm-offset-2">
+        <button class="btn btn-primary radius" type="submit"><i class="Hui-iconfont">&#xe615;</i> 提交病历</button>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <a onclick="javascript:saveMedical();" class="btn btn-secondary radius"><i
+                class="Hui-iconfont">&#xe632;</i>保存</a>
+        <button onClick="layer_close();" class="btn btn-default radius" type="button"><i
+                class="Hui-iconfont">&#xe6a6;</i>取消&nbsp;
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/WdatePicker/WdatePicker.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+
+<script src="../js/jquery.validation/jquery.validate.js"></script>
+<script src="../js/jquery.validation/validate-methods.js"></script>
+<script src="../js/jquery.validation/messages_zh.js"></script>
+<script src="../js/hospital.js"></script>
+<script>
+  $(window).on('load', () => {
+    var cid = localStorage.getItem("cid")
+    var rid = localStorage.getItem("rid")
+    var doid = localStorage.getItem("doid")
+    localStorage.removeItem("cid")
+    localStorage.removeItem("rid")
+    localStorage.removeItem("doid")
+
+    $("#doid").val(doid)
+
+    $('.skin-minimal input').iCheck({
+      checkboxClass: 'icheckbox-blue',
+      radioClass: 'iradio-blue',
+      increaseArea: '20%'
+    });
+
+    $("#tab-system").Huitab({
+      index: 0
+    });
+
+    //页面加载时,默认开药、药方按钮禁用
+    $("#btn1").addClass("btn disabled radius");
+    $("#btn2").addClass("btn disabled radius");
+
+    //radio选择住院 | 开药时,修改按钮样式
+    $(':radio').on('ifChecked', function (event) {
+      if ($(this).val() == 2 || $(this).val() == 3) {
+        $("#btn1").removeClass()
+        $("#btn2").removeClass()
+        $("#btn1").addClass("btn btn-success radius");
+        $("#btn2").addClass("btn btn-success radius");
+      } else {
+        $("#btn1").removeClass()
+        $("#btn2").removeClass()
+        $("#btn1").addClass("btn disabled radius");
+        $("#btn2").addClass("btn disabled radius");
+      }
+    });
+
+    // 医疗方案
+    $.ajax({
+      type: 'get',
+      url: HOST_URL + 'doctorvisgetmedical/' + cid + "/" + rid,
+      headers: createAuthorizationTokenHeader(),
+      dataType: 'json',
+      success: function (data) {
+        $("#cardspname").html(data.cards.pname)
+        $("#cardscid").html(data.cards.cid)
+        $("#cardsgender").html(data.cards.gender == 'M' ? '男' : '女')
+        $("#cardsidcard").html(data.cards.idcard)
+        $("#cid").val(data.cards.cid)
+        $("#rid").val(data.rid)
+        $("#by2").val(data.by2)
+        $("#brief").val(data.by1)
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.log("Spring exception:", jqXHR.responseJSON.exception)
+        layer.alert("系统出现错误，请联系管理员");
+      },
+    })
+
+    // 提交表单
+    $("#form-article-add").validate({
+      rules: {
+        //诊断结果字符长度限制在4到100
+        brief: {
+          required: true,
+          minlength: 4,
+          maxlength: 200
+        },
+      },
+      onkeyup: false,
+      focusCleanup: true,
+      success: "valid",
+      submitHandler: function (form) {
+        layer.confirm('是否确定提交?', function () {
+          // 添加病历
+          $(form).ajaxSubmit({
+            type: 'post',
+            url: HOST_URL + "doctorvisaddmedical",
+            dataType: "json",
+            headers: createAuthorizationTokenHeader(),
+            success: function (data) {
+              if (data.result == -1) {
+                layer.msg('还没有开药方!', {icon: 2, time: 1000});
+              } else if (data.result == 2) {
+                var index = parent.layer.getFrameIndex(window.name);
+                layer.alert('病历已提交至住院部,请病人办理住院手续!', {
+                  skin: 'layui-layer-lan'
+                  , closeBtn: 0
+                  , anim: 4 //动画类型
+                }, function () {
+                  parent.location.reload();
+                  parent.layer.close(index);
+                });
+              } else {
+                var index = parent.layer.getFrameIndex(window.name);
+                layer.msg('病历添加成功!', {icon: 1, time: 1000});
+                setTimeout(function () {
+                  parent.location.reload();
+                  parent.layer.close(index);
+                }, 1000);
+              }
+
+            },
+            error: function (XmlHttpRequest, textStatus, errorThrown) {
+              layer.msg('系统内部错误,请与管理员联系!', {icon: 1, time: 1000});
+            }
+          });
+        })
+
+      }
+    });
+  })
+
+  /**
+   * 药信息
+   * @param title
+   * @param url
+   * @param w
+   * @param h
+   */
+  function addpres(title, url, w, h) {
+    localStorage.setItem("cid", $("#cid").val())
+    localStorage.setItem("rid", $("#rid").val())
+    localStorage.setItem("by2", $("#by2").val())
+
+    localStorage.setItem("pname", $("#cardspname").html())
+    localStorage.setItem("cardscid", $("#cardscid").html())
+
+    layer_show(title, url, w, h);
+  }
+
+  /**
+   * 查看药方项
+   * @param title
+   * @param url
+   * @param w
+   * @param h
+   */
+  function findPrescription(title, url, w, h) {
+    // 药方 ID
+    var prid = localStorage.getItem("prid")
+    if (prid) {
+      console.log('药方id: ', prid)
+      $("#by2").val(prid)
+      //localStorage.removeItem("prid")
+    } else {
+      localStorage.setItem("prid", $("#by2").val())
+    }
+
+    localStorage.setItem("pname", $("#cardspname").html())
+    localStorage.setItem("cardscid", $("#cardscid").html())
+
+    layer_show(title, url, w, h);
+  }
+
+  function saveMedical() {
+    var rid = $("#rid").val()
+    var brief = $("#brief").val()
+    $.ajax({
+      type: 'post',
+      url: HOST_URL + "doctorvissavemedical",
+      data: {"rid": rid, "brief": brief},
+      headers: createAuthorizationTokenHeader(),
+      success: function (data) {
+        if (data.result == 1) {
+          layer.msg('保存成功!', {icon: 1, time: 1000});
+          var index = parent.layer.getFrameIndex(window.name);
+          setTimeout(function () {
+            parent.location.reload();
+            parent.layer.close(index);
+          }, 700);
+        }
+      }
+    })
+  }
+</script>
+</body>
+</html>

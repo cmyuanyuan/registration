@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统 医疗卡管理</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb">
+  <i class="Hui-iconfont">&#xe67f;</i> 首页
+  <span class="c-gray en">&gt;</span>医疗卡管理中心
+  <span class="c-gray en">&gt;</span>办卡充值
+  <a class="btn btn-success radius r"
+     style="line-height:1.6em;margin-top:3px"
+     href="javascript:location.replace(location.href);" title="刷新">
+    <i class="Hui-iconfont">&#xe68f;</i>
+  </a>
+</nav>
+
+<div class="page-container">
+  <div class="cl pd-5 bg-1 bk-gray mt-20">
+			<span class="l">
+        <a href="javascript:;"
+           onclick="member_add('添加诊疗卡','cardsedit.html','450','405')"
+           class="btn btn-primary radius">
+          <i class="Hui-iconfont">&#xe600;</i>办卡业务
+        </a>
+      </span>
+    <span class="r">共有诊疗卡:&nbsp;
+      <strong id="dataLength"></strong>&nbsp;张
+			</span>
+  </div>
+  <div class="mt-20">
+    <table class="table table-border table-bordered table-hover table-bg table-sort">
+      <thead>
+      <tr class="text-c">
+        <th width="80">诊疗卡号</th>
+        <th width="100">用户名</th>
+        <th width="40">性别</th>
+        <th width="110">手机</th>
+        <th width="200">身份证</th>
+        <th width="80">余额</th>
+        <th width="130">办卡时间</th>
+        <th width="70">状态</th>
+        <th width="100">操作</th>
+      </tr>
+      </thead>
+      <tfoot>
+      <tr class="text-c">
+        <th width="80">诊疗卡号</th>
+        <th width="100">用户名</th>
+        <th width="40">性别</th>
+        <th width="110">手机</th>
+        <th width="200">身份证</th>
+        <th width="80">余额</th>
+        <th width="130">办卡时间</th>
+        <th width="70">状态</th>
+        <th width="100">操作</th>
+      </tr>
+      </tfoot>
+      <tbody>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2017-2027 SONG.net All Rights Reserved.
+  </div>
+</footer>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/WdatePicker/WdatePicker.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+<script src="../js/hospital.js"></script>
+<script>
+  $(() => {
+    // 加载医疗卡数据
+    $.ajax({
+      url: HOST_URL + "cards",
+      type: "GET",
+      contentType: "application/json; charset=utf-8",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data, textStatus, jqXHR) {
+        console.log(data)
+        $("#dataLength").html(data.length)
+
+        var text = ``
+        $.each(data, (i, item) => {
+          var gender = "男"
+          if (item.gender == 'F') {
+            gender = "女"
+          }
+
+          var doexit = `<a href="javascript:;" onclick="member_stop(this, ${item.cid})"><span class="label label-success radius">正常使用</span></a>`
+          var onclick = `onclick="member_edit(${item.cid},'${item.pname}')"`
+          if (item.doexist == 0) {
+            doexit = `<a href="javascript:;" onclick="member_start(this, ${item.cid})"><span class="label label-defaunt radius">已挂失</span></a>`
+            onclick = ``
+          }
+
+          text += `
+          <tr class="text-c">
+            <td>${item.cid}</td>
+            <td>${item.pname}</td>
+            <td>${gender}</td>
+            <td>${item.phone}</td>
+            <td>${item.idcard}</td>
+            <td>${item.ramaining}</td>
+            <td>${item.newdate}</td>
+            <td class="td-status">${doexit}</td>
+            <td class="td-manage"><a
+                    title="充值" href="javascript:;"
+                    ${onclick}
+                    class="ml-5" style="text-decoration:none"><i
+                    class="Hui-iconfont">&#xe6b7;充值</i></a>
+            </td>
+          </tr>
+          `
+        })
+        $("tbody").append(text)
+
+        $('.table-sort').DataTable({
+          language: {
+            url: "../js/zh_CN.txt"
+          }
+        })
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.log("Spring exception:", jqXHR.responseJSON.exception)
+        layer.alert("系统出现错误,请联系管理员!");
+      }
+    })
+
+    // 开启服务端模式,使用ajax请求
+    /*$('.table').DataTable({
+      language: {
+        url: "../js/zh_CN.txt"
+      },
+      processing: true,
+      serviceSize: true,
+      ajax: {
+        url: HOST_URL + "cards",
+        type: "GET",
+        contentType: "application/json; charset=utf-8",
+        headers: createAuthorizationTokenHeader()
+      }
+    })*/
+  })
+
+  /*用户-添加*/
+  function member_add(title, url, w, h) {
+    layer_show(title, url, w, h);
+  }
+
+  /*用户-充值*/
+  function member_edit(cid, name) {
+    layer.prompt({title: '充值金额'}, function (val, index) {
+      $.ajax({
+        type: 'put',
+        url: HOST_URL + 'cards/' + cid + '/' + val + '/topup',
+        headers: createAuthorizationTokenHeader(),
+        dataType: 'json',
+        success: function (data) {
+          if (data.result == 0) {
+            layer.alert('金额输入错误，充值失败！', {
+              skin: 'layui-layer-lan'
+              , closeBtn: 0
+              , anim: 4 //动画类型
+            });
+            layer.close(index);
+          } else {
+            /* layer.msg("卡号"+cid+"充值了："+val+"元"); */
+            layer.alert("卡号 " + cid + " " + name + "充值了 " + val + " 元", {
+              skin: 'layui-layer-lan', //样式类名
+              closeBtn: 0, //不显示关闭按钮
+              anim: 2
+            }, function () {
+              layer.close(index);
+              setTimeout(function () {
+                location.reload();
+              }, 50);
+            });
+          }
+        },
+        error: function (data) {
+          console.log(data);
+          layer.alert('金额输入错误，充值失败！', {
+            skin: 'layui-layer-lan'
+            , closeBtn: 0
+            , anim: 4 //动画类型
+          });
+          layer.close(index);
+        },
+      })
+    })
+  }
+
+  /*用户-挂失*/
+  function member_stop(obj, cid) {
+    layer.confirm('确认要挂失吗？', function (index) {
+      $.ajax({
+        type: 'put',
+        url: HOST_URL + 'cards/' + cid + '/0/enable',
+        headers: createAuthorizationTokenHeader(),
+        dataType: 'json',
+        success: function (data) {
+          $(obj).parents("tr").find(".td-manage").prepend('<a style="text-decoration:none" onClick="member_start(this,id)" href="javascript:;" title="启用"><i class="Hui-iconfont">&#xe6e1;</i></a>');
+          $(obj).parents("tr").find(".td-status").html('<span class="label label-defaunt radius">已挂失</span>');
+          $(obj).remove();
+          layer.msg('已挂失!', {icon: 5, time: 1000});
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          console.log("Spring exception:", jqXHR.responseJSON.exception)
+          layer.alert("系统出现错误,请联系管理员!");
+        }
+      })
+    })
+  }
+
+  /*用户-启用*/
+  function member_start(obj, cid) {
+    layer.confirm('确认要启用吗？', function (index) {
+      $.ajax({
+        type: 'put',
+        url: HOST_URL + 'cards/' + cid + '/1/enable',
+        headers: createAuthorizationTokenHeader(),
+        dataType: 'json',
+        success: function (data) {
+          $(obj).parents("tr").find(".td-manage").prepend('<a style="text-decoration:none" onClick="member_stop(this,id)" href="javascript:;" title="挂失"><i class="Hui-iconfont">&#xe631;</i></a>');
+          $(obj).parents("tr").find(".td-status").html('<span class="label label-success radius">正常使用</span>');
+          $(obj).remove();
+          layer.msg('已恢复使用!', {icon: 6, time: 1000});
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          console.log("Spring exception:", jqXHR.responseJSON.exception)
+          layer.alert("系统出现错误,请联系管理员!");
+        },
+      })
+    })
+  }
+</script>
+</body>
+</html>

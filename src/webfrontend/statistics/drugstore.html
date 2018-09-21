@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统 药品销售统计</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb"><i class="Hui-iconfont">&#xe67f;</i> 首页 <span class="c-gray en">&gt;</span> 药品管理 <span
+        class="c-gray en">&gt;</span>库存统计 <a class="btn btn-success radius r" style="line-height:1.6em;margin-top:3px"
+                                             href="javascript:location.replace(location.href);" title="刷新"><i
+        class="Hui-iconfont">&#xe68f;</i></a></nav>
+
+<div class="page-container">
+  <div class="text-c">
+    <form action="">
+      <label>选择药品类型：</label>
+      <span class="select-box" style="width: 225px;">
+				<select class="select" size="1" name="dyid" style="width: 215px;" id="dyid">
+					<option value="0">全部类型</option>
+
+				</select>
+			</span>
+      <a class="btn btn-success radius" onclick="searchDrug()"><i class="Hui-iconfont">&#xe665;</i> 查询</a>
+    </form>
+  </div>
+  <div class="cl pd-5 bg-1 bk-gray mt-20"><span class="l"> &nbsp;</span></div>
+  <div id="container" style="min-width:700px;height:500px"></div>
+</div>
+
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2017-2027 SONG.net All Rights Reserved.
+  </div>
+</footer>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+
+<script src="../js/highcharts/highcharts.js"></script>
+<script src="../js/highcharts/exporting.js"></script>
+<script src="../js/hospital.js"></script>
+<script>
+  $(window).on('load', () => {
+
+    // 加载药品类型
+    $.ajax({
+      url: HOST_URL + 'drugtypes/',
+      type: "GET",
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data) {
+        $.each(data, (i, item) => {
+          $("#dyid").append(`<option value="${item.dyid}">${item.dyname}</option>`)
+        })
+      }
+    })
+
+    findDrug(0)
+  })
+
+
+  function searchDrug() {
+    findDrug($("#dyid").val())
+  }
+
+  function findDrug(dyid) {
+    $('#container').empty();
+    $.ajax({
+      url: HOST_URL + 'statisticsdrugstore/' + dyid,
+      type: "GET",
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data) {
+        var at = data.atlist
+        var sum = data.sum;
+        //console.log('....',at)
+        //console.log('....',sum)
+        //画图!!!!!
+        $('#container').highcharts({
+          chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+          },
+          title: {
+            text: '各类型药品占药品总数的比例统计'
+          },
+          subtitle: {
+            text: '药品总数:' + sum
+          },
+          tooltip: {
+            formatter: function () {
+              return '<b>' + this.point.name + '</b> 数量： ' + Highcharts.numberFormat(this.y, 0, ',');
+            }
+          },
+          plotOptions: {
+            pie: {
+              allowPointSelect: true,
+              cursor: 'pointer',
+              dataLabels: {
+                enabled: true,
+                color: '#000000',
+                connectorColor: '#000000',
+                formatter: function () {
+                  return '<b>' + this.point.name + '</b>: ' + Highcharts.numberFormat(this.percentage, 1) + '% ';
+                }
+              }
+            }
+          },
+          series: [{
+            type: 'pie',
+            name: 'Browser share',
+            data: at
+            /*  [
+                 ['注射用剂',   25],
+                 ['抗生素类',  37],
+                 ['中成药',  21],
+                 ['医疗器具',   12],
+                 ['其他',   7]
+             ] */
+          }]
+        });
+      }
+    })
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>301医院门诊管理系统</title>
+  <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="static/h-ui.admin/css/H-ui.login.css">
+  <link rel="stylesheet" href="static/h-ui.admin/css/style.css">
+  <link rel="stylesheet" href="static/Hui-iconfont/1.0.8/iconfont.css">
+</head>
+<body>
+<div class="header"><h2 class="loginHead">301医院门诊管理系统</h2></div>
+<div class="loginWraper">
+  <div id="loginform" class="loginBox">
+    <form class="form form-horizontal" id="f" method="post">
+      <div class="row cl">
+        <label class="form-label col-xs-3"><i class="Hui-iconfont">&#xe60d;</i></label>
+        <div class="formControls col-xs-8">
+          <input id="aname" name="aname" type="text" placeholder="账户" class="input-text size-L">
+        </div>
+      </div>
+      <div class="row cl">
+        <label class="form-label col-xs-3"><i class="Hui-iconfont">&#xe60e;</i></label>
+        <div class="formControls col-xs-8">
+          <input id="pwd" name="pwd" type="password" placeholder="密码" class="input-text size-L">
+        </div>
+      </div>
+
+      <div class="row cl">
+        <div class="formControls col-xs-8 col-xs-offset-3">
+          <input id="verifyCode" name="verifyCode" type="text" placeholder="验证码" style="width: 100px;"
+                 class="input-text size-L"/>
+          &nbsp;&nbsp;
+          <img align="top" onclick="change()"
+               id="verify" style="cursor:pointer; height:40px; width: 160px;" alt="看不清，换一张" title="看不清，换一张"/></div>
+      </div>
+
+      <div class="row cl">
+        <div class="formControls col-xs-8 col-xs-offset-3">
+          <input id="btnLogin" type="button" class="btn btn-success radius size-L"
+                 value="&nbsp;登&nbsp;&nbsp;&nbsp;&nbsp;录&nbsp;">
+          <input type="reset" class="btn btn-default radius size-L"
+                 value="&nbsp;取&nbsp;&nbsp;&nbsp;&nbsp;消&nbsp;">
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="footer">Copyright &copy;2017-2027 SONG.net All Rights Reserved.</div>
+
+<script src="js/jquery-3.3.1.min.js"></script>
+<script src="js/jwt-decode.min.js"></script>
+<script src="static/h-ui/js/H-ui.min.js"></script>
+<script src="static/layer/2.4/layer.js"></script>
+<script src="js/hospital.js"></script>
+<script>
+  // jQuery team mentioned in their 3.0 release that .load, .unload, and .error, deprecated since jQuery 1.8, are no more. Use .on() to register listeners.
+  $(window).on('load', () => {
+    if (window != top) {
+      top.location.href = "index.html";
+    }
+
+    /**
+     * 注册登录按钮点击事件
+     */
+    $("#btnLogin").click(() => {
+      var aname = $.trim($("#aname").val())
+      var pwd = $.trim($("#pwd").val())
+      var verifyCode = $.trim($("#verifyCode").val())
+
+      if (!aname) {
+        // layer弹窗
+        layer.alert("账户不能为空!")
+        return
+      }
+      if (!pwd) {
+        layer.alert("密码不能为空!")
+        return
+      }
+
+      // 基于Token的 jwt 登录,不需验证码 (页面可注释)
+      /*
+      if (!verifyCode) {
+        layer.alert("验证码不能为空!")
+        return
+      }*/
+
+      // 基于Token的 jwt 登录
+      var formData = {
+        username: aname,
+        password: pwd
+      }
+
+      $.ajax({
+        url: HOST_URL + "auth",
+        type: "POST",
+        data: JSON.stringify(formData),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (data, textStatus, jqXHR) {
+          setJwtToken(data.token);
+
+          console.log(getJwtToken())
+          window.location.href = "main.html"
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          if (jqXHR.status === 401) {
+            console.log("Spring exception:", jqXHR.responseJSON.exception)
+          } else {
+            throw new Error("an unexpected error occured: " + errorThrown);
+          }
+          layer.alert("错误的用户名或密码")
+        }
+      })
+    })
+
+    // 验证码
+    // 第一次加载验证码
+    change()
+
+    // 点击验证码图片重新加载
+    $("#verify").click(change())
+  })
+
+  function change() {
+    var time = new Date();
+    var timestamp = time.getSeconds();
+    $("#verify").attr("src", HOST_URL + "imagecode?timestamp=" + timestamp);
+  }
+</script>
+</body>
+</html>

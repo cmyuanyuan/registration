@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统 医疗卡管理 注册</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<article class="page-container">
+  <form class="form form-horizontal" id="form-card-add" method="post">
+    <div class="row cl">
+      <label class="form-label col-xs-4 col-sm-3" style="padding-left:84px;"><span class="c-red">*</span>姓名:</label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="text" class="input-text" placeholder="姓名" id="pname" name="pname">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <label class="form-label col-xs-4 col-sm-3" style="padding-left:84px;"><span class="c-red">*</span>性别:</label>
+      <div class="formControls col-xs-8 col-sm-9 skin-minimal">
+        <div class="radio-box">
+          <input name="gender" type="radio" id="gender-m" checked value="M">
+          <label for="gender-m">男</label>
+        </div>
+        <div class="radio-box">
+          <input type="radio" id="gender-f" name="gender" value="F">
+          <label for="gender-f">女</label>
+        </div>
+      </div>
+    </div>
+    <div class="row cl">
+      <label class="form-label col-xs-4 col-sm-3" style="padding-left:84px;"><span class="c-red">*</span>手机:</label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="text" class="input-text" value="" placeholder="手机" id="phone" name="phone">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <label class="form-label col-xs-4 col-sm-3" style="padding-left:70px;"><span class="c-red">*</span>身份证:</label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="text" class="input-text" placeholder="身份证" name="idcard" id="idcard">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="hidden" class="input-text" autocomplete="off" value="888888" placeholder="密码" id="pwd" name="pwd">
+      </div>
+    </div>
+    <div>
+      <input type="hidden" name="doexist" value="1"/>
+    </div>
+    <div class="row cl">
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="hidden" class="input-text" value="100.00" placeholder="" id="ramaining" name="ramaining">
+      </div>
+    </div>
+    <div class="row cl">
+      <div class="col-xs-8 col-sm-9 col-xs-offset-4 col-sm-offset-3">
+        <input class="btn btn-primary radius" type="submit" value="&nbsp;&nbsp;办卡充值&nbsp;&nbsp;">
+      </div>
+    </div>
+  </form>
+</article>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+
+<script src="../js/jquery.validation/jquery.validate.js"></script>
+<script src="../js/jquery.validation/validate-methods.js"></script>
+<script src="../js/jquery.validation/messages_zh.js"></script>
+<script src="../js/hospital.js"></script>
+
+<script>
+  $(window).on('load', () => {
+    $('.skin-minimal input').iCheck({
+      checkboxClass: 'icheckbox-blue',
+      radioClass: 'iradio-blue',
+      increaseArea: '20%'
+    })
+
+    $("#form-card-add").validate({
+      rules: {
+        pname: {
+          required: true,
+          minlength: 1,
+          maxlength: 16
+        },
+        pwd: {
+          required: true,
+        },
+        gender: {
+          required: true,
+        },
+        phone: {
+          required: true,
+          isPhone: true,
+        },
+        idcard: {
+          rangelength: [18, 18],
+          required: true,
+        },
+      },
+      onkeyup: false,
+      focusCleanup: true,
+      success: "valid",
+      submitHandler: function (form) {
+        layer.confirm('确认收取105元作为办卡及首充费用?', () => {
+          console.log(JSON.stringify(getFormData($(form))))
+          $.ajax({
+            url: HOST_URL + "cards",
+            type: "post",
+            data: JSON.stringify(getFormData($(form))),
+            dataType: "json",
+            contentType: "application/json;charset=utf-8",
+            headers: createAuthorizationTokenHeader(),
+            success: function (data, textStatus, jqXHR) {
+              if (data.result == 1) {
+                var index = parent.layer.getFrameIndex(window.name);
+                layer.msg('办卡成功！余额100元！', {icon: 1, time: 1000});
+                setTimeout(function () {
+                  window.parent.location.reload();
+                  parent.layer.close(index);
+                }, 800);
+              }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+              console.log("Spring exception:", jqXHR.responseJSON.exception)
+              layer.alert("系统出现错误,请联系管理员!");
+            }
+          })
+        })
+
+        /* var index = parent.layer.getFrameIndex(window.name);
+        window.parent.location.reload();
+        parent.layer.close(index); */
+      }
+    })
+  })
+</script>
+</body>
+</html>

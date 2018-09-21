@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统 药品类型列表</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+
+<nav class="breadcrumb"><i class="Hui-iconfont">&#xe67f;</i> 首页 <span class="c-gray en">&gt;</span> 药品管理 <span
+        class="c-gray en">&gt;</span> 药品类型列表 <a class="btn btn-success radius r"
+                                                style="line-height:1.6em;margin-top:3px"
+                                                href="javascript:location.replace(location.href);" title="刷新"><i
+        class="Hui-iconfont">&#xe68f;</i></a></nav>
+<div class="page-container">
+
+  <div class="cl pd-5 bg-1 bk-gray mt-20"> <span class="l">
+
+	<a href="javascript:;" onclick="type_add()" class="btn btn-primary radius"><i class="Hui-iconfont">&#xe600;</i>添加药品类型</a>
+	&nbsp;
+	<a href="javascript:;" onclick="types_start()" class="btn btn-success radius"><i class="Hui-iconfont">&#xe676;</i> 批量启用</a>
+ 	<a href="javascript:;" onclick="types_stop()" class="btn btn-danger radius"><i class="Hui-iconfont">&#xe6e2;</i> 批量停用</a>
+	</span> <span class="r"></span>
+  </div>
+  <div class="mt-20">
+    <table class="table table-border table-bordered table-hover table-bg table-sort">
+      <thead>
+      <tr class="text-c">
+        <th width="25" id="allcheck">全选&nbsp;<input type="checkbox" name="" value=""></th>
+        <th width="30">类型编号</th>
+        <th width="100">药品类型名</th>
+        <th width="50">状态</th>
+        <th width="30">操作</th>
+      </tr>
+      </thead>
+      <tfoot>
+      <tr class="text-c">
+        <th width="25">全选&nbsp;</th>
+        <th width="30">类型编号</th>
+        <th width="100">药品类型名</th>
+        <th width="50">状态</th>
+        <th width="30">操作</th>
+      </tr>
+      </tfoot>
+      <tbody>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2017-2027 SONG.net All Rights Reserved.
+  </div>
+</footer>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/WdatePicker/WdatePicker.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+<script src="../js/hospital.js"></script>
+<script>
+  $(window).on('load', () => {
+    // 加载药品类型
+    $.ajax({
+      url: HOST_URL + 'drugtypes',
+      type: "GET",
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data) {
+        var text = ``
+        $.each(data, (i, item) => {
+          var dystate = `<span class="label label-defaunt radius">已停用</span>`
+          var opdystate = `<a style="text-decoration:none" onClick="type_start(this,${item.dyid})" href="javascript:;" title="启用"><i class="Hui-iconfont">&#xe66b;启用</i></a>`
+          if (item.dystate == 1) {
+            dystate = `<span class="label label-success radius">已启用</span>`
+            opdystate = `<a style="text-decoration:none" onClick="type_stop(this,${item.dyid})" href="javascript:;" title="停用"><i class="Hui-iconfont">&#xe631;停用</i></a>`
+          }
+
+          text += `
+            <tr class="text-c" id="dy${item.dyid}">
+              <td><input type="checkbox" value="${item.dyid}" name="dyid"></td>
+              <td>${item.dyid}</td>
+              <td>${item.dyname}</td>
+              <td class="td-status">${dystate}</td>
+              <td class="td-manage">${opdystate}</td>
+            </tr>
+          `
+        })
+        $("tbody").append(text)
+
+        $('.table-sort').DataTable({
+          language: {
+            url: "../js/zh_CN.txt"
+          },
+          retrieve: true, // Cannot reinitialise DataTable
+        })
+      }
+    })
+  })
+
+  /*类型-添加*/
+  function type_add() {
+    layer.prompt({title: '新增药品类型'}, function (val, index) {
+      $.ajax({
+        type: 'POST',
+        url: HOST_URL + 'drugtypesadd',
+        data: {dyname: val},
+        dataType: 'json',
+        headers: createAuthorizationTokenHeader(),
+        success: function (data) {
+          if (data.result == 0) {
+            layer.msg('新增' + val + '失败！');
+            layer.close(index);
+          } else {
+            layer.msg('新增了药品类型: ' + val);
+            layer.close(index);
+            setTimeout(function () {
+              location.reload();
+            }, 800);
+          }
+        },
+        error: function (data) {
+          console.log(data.msg);
+        },
+      });
+
+    });
+  }
+
+  /*类型-停用*/
+  function type_stop(obj, id) {
+    layer.confirm('确认要停用吗?', function (index) {
+      $.ajax({
+        type: 'POST',
+        url: HOST_URL + 'drugtypeschangestate',
+        data: {dyid: id, dystate: 0},
+        dataType: 'json',
+        headers: createAuthorizationTokenHeader(),
+        success: function (data) {
+          if (data.result == 1) {
+            $(obj).parents("tr").find(".td-manage").prepend('<a style="text-decoration:none" onClick="type_start(this,' + id + ')" href="javascript:;" title="启用"><i class="Hui-iconfont">&#xe66b;启用</i></a>');
+            $(obj).parents("tr").find(".td-status").html('<span class="label label-defaunt radius">已停用</span>');
+            $(obj).remove();
+            layer.msg('已停用!', {icon: 4, time: 1000});
+          } else if (data.result == -1) {
+            layer.msg('该类别下存在可用药品,无法停用!', {icon: 2, time: 1500});
+          }
+        },
+        error: function (data) {
+          console.log(data);
+        },
+      });
+      layer.close(index);
+    });
+  }
+
+  /*类型-启用*/
+  function type_start(obj, id) {
+    layer.confirm('确认要启用吗?', function (index) {
+      $.ajax({
+        type: 'POST',
+        url: HOST_URL + 'drugtypeschangestate',
+        data: {dyid: id, dystate: 1},
+        dataType: 'json',
+        headers: createAuthorizationTokenHeader(),
+        success: function (data) {
+          $(obj).parents("tr").find(".td-manage").prepend('<a style="text-decoration:none" onClick="type_stop(this,' + id + ')" href="javascript:;" title="停用"><i class="Hui-iconfont">&#xe631;停用</i></a>');
+          $(obj).parents("tr").find(".td-status").html('<span class="label label-success radius">已启用</span>');
+          $(obj).remove();
+          layer.msg('已启用!', {icon: 6, time: 1000});
+        },
+        error: function (data) {
+          console.log(data);
+        },
+      });
+    });
+  }
+
+  //批量启用
+  function types_start() {
+    var obj = document.getElementsByName("dyid");
+    var check_val = [];
+    for (k in obj) {
+      if (obj[k].checked)
+        check_val.push(obj[k].value);
+    }
+    layer.confirm('确认要批量启用吗?', function (index) {
+      if (check_val.length < 1) {
+        layer.tips('  请至少选中一行进行批量操作!', '#allcheck', {
+          tips: [1, '#E65']
+        });
+      } else {
+        $.each(check_val, function (index, id) {
+          $.ajax({
+            type: 'POST',
+            url: HOST_URL + 'drugtypeschangestate',
+            data: {dyid: id, dystate: 1},
+            dataType: 'json',
+            headers: createAuthorizationTokenHeader(),
+            success: function (data) {
+              var dy = $("#dy" + id);
+              $(dy).find(".td-manage").find("a").remove();
+              $(dy).find(".td-manage").prepend('<a style="text-decoration:none" onClick="type_stop(this,' + id + ')" href="javascript:;" title="停用"><i class="Hui-iconfont">&#xe631;停用</i></a>');
+              $(dy).find(".td-status").html('<span class="label label-success radius">已启用</span>');
+
+            },
+          });
+        });
+        layer.msg('批量启用完成!', {icon: 6, time: 1200});
+      }
+    });
+  }
+
+  //批量停用
+  function types_stop() {
+    var obj = document.getElementsByName("dyid");
+    var check_val = [];
+    for (k in obj) {
+      if (obj[k].checked)
+        check_val.push(obj[k].value);
+    }
+    layer.confirm('确认要批量停用吗?', function (index) {
+      if (check_val.length < 1) {
+        layer.tips('  请至少选中一行进行批量操作!', '#allcheck', {
+          tips: [1, '#E65']
+        });
+      } else {
+        var i = 0;
+        $.each(check_val, function (index, id) {
+          $.ajax({
+            type: 'POST',
+            url: HOST_URL + 'drugtypeschangestate',
+            data: {dyid: id, dystate: 0},
+            dataType: 'json',
+            async: false, //将ajax改为同步
+            headers: createAuthorizationTokenHeader(),
+            success: function (data) {
+              var dy = $("#dy" + id);
+              if (data.result == 1) {
+                $(dy).find(".td-manage").find("a").remove();
+                $(dy).find(".td-manage").prepend('<a style="text-decoration:none" onClick="type_start(this,' + id + ')" href="javascript:;" title="启用"><i class="Hui-iconfont">&#xe66b;启用</i></a>');
+                $(dy).find(".td-status").html('<span class="label label-defaunt radius">已停用</span>');
+              } else if (data.result == -1) {
+                i++;
+              }
+            },
+          });
+        });
+        if (i == 0)
+          layer.msg('批量停用完成!', {icon: 4, time: 1200});
+        else
+          layer.msg('包含可用药品的类型暂未停用!', {icon: 7, time: 1700});
+      }
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统 现场挂号</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb">
+  <i class="Hui-iconfont">&#xe67f;</i> 首页 <span class="c-gray en">&gt;</span>
+  挂号业务 <span class="c-gray en">&gt;</span> 现场挂号 <a
+        class="btn btn-success radius r"
+        style="line-height:1.6em;margin-top:3px"
+        href="javascript:location.replace(location.href);" title="刷新"><i
+        class="Hui-iconfont">&#xe68f;</i></a>
+</nav>
+
+<div class="page-container">
+
+  <table class="table table-border table-bordered table-bg table-hover">
+    <thead>
+    <tr>
+      <th scope="col" colspan="4">所有科室及其医生</th>
+    </tr>
+    <tr class="text-c">
+      <th width="30">科室编号</th>
+      <th width="30">科室名称</th>
+      <th width="80">科室介绍</th>
+      <th width="400">可挂号医生</th>
+    </tr>
+    </thead>
+    <tfoot>
+    <tr class="text-c">
+      <th width="30">科室编号</th>
+      <th width="30">科室名称</th>
+      <th width="80">科室介绍</th>
+      <th width="400">可挂号医生</th>
+    </tr>
+    </tfoot>
+    <tbody>
+
+    </tbody>
+  </table>
+</div>
+
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2017-2027 SONG.net All Rights Reserved.
+  </div>
+</footer>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/WdatePicker/WdatePicker.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+<script src="../js/hospital.js"></script>
+<script>
+  $(window).on('load', () => {
+
+    // 现场挂号
+    $.ajax({
+      url: HOST_URL + "booksbuyticket",
+      type: "GET",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data, textStatus, jqXHR) {
+        console.log(data)
+
+        var text = ``
+        $.each(data, (i, item) => {
+          // 科室中的值班医生
+          var doctorText = ``
+          $.each(item.doctorsList, (i, doctorItem) => {
+            var span = 'class="label label-success radius"'
+            if (doctorItem.pcreg < doctorItem.xcreg) {
+              span = 'class="label label-danger radius"'
+            }
+            doctorText += `
+          &nbsp;
+          <span ${span}>
+            <a title="挂号(${doctorItem.xcreg}/${doctorItem.pcreg})" href="javascript:;"
+              onclick="regDoc(this,${doctorItem.doid},'${doctorItem.doname }',${doctorItem.xcreg},${doctorItem.pcreg})"
+              class="ml-5" style="text-decoration:none;color:white;">
+              <i class="Hui-iconfont">&#xe62c;</i>${doctorItem.title}：${doctorItem.doname}
+            </a>
+          </span>
+          &nbsp;
+          `
+          })
+
+          // 科室
+          text += `
+          <tr class="text-c">
+          <td>${item.deid}</td>
+          <td>${item.dename}</td>
+          <td>${item.intro}</td>
+          <td class="text-l">${doctorText}</td>
+				</tr>
+          `
+        })
+        $("tbody").append(text)
+
+        $('.table-hover').DataTable({
+          language: {
+            url: "../js/zh_CN.txt"
+          }
+        })
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.log("Spring exception:", jqXHR.responseJSON.exception)
+        layer.alert("系统出现错误,请联系管理员!");
+      }
+    })
+  })
+
+  function regDoc(obj, doid, doname, rnum, rsum) {
+    if (rnum < rsum) {
+      localStorage.setItem("doid", doid);
+      layer_show('门诊挂号', 'buyticketdoctor.html', '580', '400');
+    } else {
+      //人满了
+      layer.tips(doname + ' 医生预约人数已满!', obj, {
+        tips: [1, '#D52B2B'],
+        time: 4000
+      });
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @author SONG -->
+<mapper namespace="com.hospital.registration.mapper.BooksMapper">
+  <resultMap type="com.hospital.registration.domain.Books" id="books-result">
+    <id property="red" column="red"/>
+    <result property="pname" column="pname"/>
+    <result property="idcard" column="idcard"/>
+    <result property="medcard" column="medcard"/>
+    <result property="dename" column="dename"/>
+    <result property="doname" column="doname"/>
+    <result property="bdate" column="bdate"/>
+    <result property="bcost" column="bcost"/>
+    <result property="phone" column="phone"/>
+    <result property="starttime" column="starttime"/>
+    <result property="bid" column="bid"/>
+  </resultMap>
+
+  <select id="findAllBook" resultMap="books-result">
+    select red,b.bid,pname,idcard,phone,medcard,dename,doname,bdate,bcost,starttime
+    from patients p,doctors do,departs de,reservation r,bookable b
+    where r.pid=p.pid and b.doid=do.doid and do.deid=de.deid and
+    b.bid=r.bid and to_days(bdate) = to_days(now()) and starttime=#{starttime}
+    and r.state=#{state}
+    <if test="idcard != null and idcard != ''">and idcard = #{idcard}</if>
+  </select>
+
+  <select id="findBooksById" parameterType="int" resultMap="books-result">
+    select red,b.bid,pname,idcard,phone,medcard,dename,doname,bdate,bcost,starttime
+    from patients p,doctors do,departs de,reservation r,bookable b
+    where r.pid=p.pid and b.doid=do.doid and do.deid=de.deid and
+    b.bid=r.bid and red=#{red}
+  </select>
+</mapper>

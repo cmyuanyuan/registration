@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<div class="page-container">
+  <div class="text-c">
+    <img src="../images/hosip.jpg" style="width:100%; height:180px">
+  </div>
+  <div class="cl pd-5 bg-1 bk-gray mt-20">
+    <span class="threed">
+      301医院门诊管理系统
+    </span>
+  </div>
+  <p></p>
+  <table class="table table-border table-bordered table-bg table-hover table-sort">
+    <thead>
+    <tr>
+      <th colspan="7" scope="col" class="text-c">信息统计</th>
+    </tr>
+    <tr class="text-c" id="times">
+      <th>门诊挂号人数统计:</th>
+    </tr>
+    </thead>
+    <tbody id="tbody">
+
+    </tbody>
+  </table>
+  <div id="container" style="min-width:700px;height:400px"></div>
+</div>
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2017-2027 SONG.net All Rights Reserved.
+  </div>
+</footer>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/WdatePicker/WdatePicker.js"></script>
+<script src="../static/layer/laypage.js"></script>
+<script src="../js/highcharts/highcharts.js"></script>
+<script src="../js/highcharts/drilldown.js"></script>
+<script src="../js/highcharts/highcharts-zh_CN.js"></script>
+<script src="../js/hospital.js"></script>
+<script>
+  $(window).on('load', () => {
+    // 门诊挂号人数统计
+    $.ajax({
+      url: HOST_URL + "booksdepart",
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (result) {
+        console.log(result)
+        $.each(result.times, (i, item) => {
+          $("#times").append(`<th>${item}</th>`)
+        })
+
+        $.each(result.booksDepartCounts, (i, item) => {
+          var childText = ``
+          $.each(item.countList, (i, childItem) => {
+            childText += `<td width="30px">${childItem}</td>`
+          })
+
+          var text = `
+          <tr class="text-c">
+            <td width="50px">${item.dename}</td>
+            ${childText}
+          </tr>
+          `
+          $("#tbody").append(text)
+        })
+
+        $('.table-sort').DataTable({
+          language: {
+            url: "../js/zh_CN.txt"
+          }
+        })
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.log("Spring exception:", jqXHR.responseJSON.exception)
+      }
+    })
+
+    // 绘制部门
+    drawDept()
+
+    // 利用 dataTables 静态排序
+    /*
+    $('.table-hover').DataTable({
+      "aaSorting": [[1, "desc"]],//默认第几个排序
+      "bStateSave": true,//状态保存
+      "bFilter": false,
+      "pading": false,
+      "bLengthChange": false,//是否显示每页大小的下拉框
+      "aLengthMenu": [[5], [5]],
+      "aoColumnDefs": [
+        {"orderable": false, "aTargets": [0]}// 不参与排序的列
+      ]
+    })*/
+  })
+
+  function drawDept() {
+    $.ajax({
+      url: HOST_URL + 'drawDept',
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data) {
+        console.log(data.seriesList);
+        console.log(data.dataList);
+        var dataList = data.dataList;
+        var seriesList = data.seriesList;
+        Highcharts.chart('container', {
+          chart: {
+            type: 'column'
+          },
+          title: {
+            text: '本季度各科室病人挂号比例'
+          },
+          subtitle: {
+            text: '详细信息'
+          },
+          xAxis: {
+            type: 'category'
+          },
+          yAxis: {
+            title: {
+              text: '总挂号人数'
+            }
+          },
+          legend: {
+            enabled: false
+          },
+          plotOptions: {
+            series: {
+              borderWidth: 0,
+              dataLabels: {
+                enabled: true,
+                format: '{point.y:.f}人'
+              }
+            }
+          },
+          tooltip: {
+            headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
+            pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y:.f}人</b> 挂号<br/>'
+          },
+          series: [{
+            name: '科室:',
+            colorByPoint: true,
+            data: dataList
+          }],
+          drilldown: {
+            series: seriesList
+          }
+        })
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.log("Spring exception:", jqXHR.responseJSON.exception)
+      }
+    })
+  }
+</script>
+</body>
+</html>

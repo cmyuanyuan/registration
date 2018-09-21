@@ -1,0 +1,53 @@
+# 服务器端口 (默认 8080) + config context path to "/" by setting an empty string
+server:
+  port: 8086
+  context-path:
+
+# mybatis 别名
+mybatis:
+  type-aliases-package: com.hospital.registration.domain
+  mapper-locations: classpath:mybatis/mapper/*.xml
+
+# 数据源
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/hospital?useSSL=false&serverTimezone=UTC
+    username: root
+    password: root
+# redis ip & port
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    pool:
+      min-idle: 0
+      max-idle: 8
+      max-active: 8
+      max-wait: -1
+  jackson:
+    serialization:
+      indent-output: true
+# mongodb
+  data:
+    mongodb:
+      uri: mongodb://127.0.0.1:27017/logs
+
+# 日志输出 info | debug
+logging:
+  level:
+    org.springframework.security: info
+    com.hospital.registration.mapper: info
+
+# JWT
+jwt:
+  header: Authorization
+  secret: mySecret
+# token 七天不过期
+  expiration: 604800
+  tokenHead: Bearer
+  route:
+    authentication:
+      path: auth
+      refresh: refresh
+
+

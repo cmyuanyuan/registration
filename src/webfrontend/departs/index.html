@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统 科室列表</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+
+<nav class="breadcrumb"><i class="Hui-iconfont">&#xe67f;</i> 首页 <span class="c-gray en">&gt;</span>
+  科室管理 <span class="c-gray en">&gt;</span> 科室列表 <a id="refresh" class="btn btn-success radius r"
+                                                   style="line-height:1.6em;margin-top:3px"
+                                                   href="javascript:location.replace(location.href);" title="刷新">
+    <i class="Hui-iconfont">&#xe68f;</i></a></nav>
+
+<div class="page-container">
+  <div class="text-c">
+  </div>
+  <div class="cl pd-5 bg-1 bk-gray mt-20"> <span class="l"> <a href="javascript:;"
+                                                               onclick="depart_edit('添加科室','edit.html',0,'380','380')"
+                                                               class="btn btn-primary radius">
+		<i class="Hui-iconfont">&#xe600;</i> 添加科室</a>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="javascript:;" onclick="deps_start()" class="btn btn-success radius">
+		<i class="Hui-iconfont">&#xe676;</i> 批量启用</a>
+ 		<a href="javascript:;" onclick="deps_stop()" class="btn btn-danger radius">
+ 		<i class="Hui-iconfont">&#xe6e2;</i> 批量停用</a>
+		</span></div>
+  <div class="mt-20">
+    <table class="table table-border table-bordered table-hover table-bg table-sort">
+      <thead>
+      <tr class="text-c">
+        <th width="25" id="allcheck">全选&nbsp;<input type="checkbox" name="" value=""></th>
+        <th width="30">编号</th>
+        <th width="50">科室名</th>
+        <th width="100">科室简介</th>
+        <th width="50">状态</th>
+        <th width="30">操作</th>
+      </tr>
+      </thead>
+      <tfoot>
+      <tr class="text-c">
+        <th width="25">全选&nbsp;</th>
+        <th width="30">编号</th>
+        <th width="50">科室名</th>
+        <th width="100">科室简介</th>
+        <th width="50">状态</th>
+        <th width="30">操作</th>
+      </tr>
+      </tfoot>
+      <tbody id="tbody">
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2017-2027 SONG.net All Rights Reserved.
+  </div>
+</footer>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/WdatePicker/WdatePicker.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+<script src="../js/hospital.js"></script>
+<script>
+  $(window).on('load', () => {
+
+    // 加载部门列表
+    $.ajax({
+      url: HOST_URL + "departs",
+      type: "GET",
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data, textStatus, jqXHR) {
+        console.log(data)
+
+        var text = ``
+        $.each(data, (i, item) => {
+          var deexist = `<span class="label label-success radius">已启用</span>`
+          var opdeexist = `<a style="text-decoration:none" onClick="drug_stop(this,${item.deid})" href="javascript:;" title="停用"><i class="Hui-iconfont">&#xe631;</i></a>`
+          if (item.deexist == 0) {
+            deexist = `<span class="label label-defaunt radius">已停用</span>`
+            opdeexist = `<a style="text-decoration:none" onClick="drug_start(this,${item.deid})" href="javascript:;" title="启用"><i class="Hui-iconfont">&#xe66b;</i></a>`
+          }
+
+          text += `
+            <tr class="text-c" id="de${item.deid }">
+              <td><input type="checkbox" value="${item.deid }" name="deid"></td>
+              <td>${item.deid }</td>
+              <td>${item.dename }</td>
+              <td >${item.intro }</td>
+              <td class="td-status">${deexist}</td>
+              <td class="td-manage">
+                ${opdeexist}
+                <a title="编辑" href="javascript:;" onclick="depart_edit('编辑科室','edit.html',${item.deid},'380','380')" class="ml-5" style="text-decoration:none"><i class="Hui-iconfont">&#xe6df;</i></a>
+              </td>
+            </tr>
+          `
+        })
+
+        $("#tbody").append(text)
+
+        $('.table-sort').DataTable({
+          language: {
+            url: "../js/zh_CN.txt"
+          },
+          retrieve: true, // Cannot reinitialise DataTable
+        })
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.log("Spring exception:", jqXHR.responseJSON.exception)
+        layer.alert("系统出现错误，请联系管理员");
+      }
+    })
+  })
+
+  /*科室-添加
+  function depart_add(title, url, w, h) {
+    layer_show(title, url, w, h);
+  }
+  */
+
+  /*科室-编辑*/
+  function depart_edit(title, url, deid, w, h) {
+    localStorage.setItem("deid", deid)
+    layer_show(title, url, w, h);
+  }
+
+  /*批量停用*/
+  function deps_stop() {
+    var obj = document.getElementsByName("deid");
+    var check_val = [];
+    for (k in obj) {
+      if (obj[k].checked)
+        check_val.push(obj[k].value);
+    }
+    layer.confirm('确认要批量停用吗？', function (index) {
+      if (check_val.length < 1) {
+        layer.tips('  请至少选中一行进行批量操作！  ', '#allcheck', {
+          tips: [1, '#E65']
+        });
+      } else {
+        var i = 0;
+        $.each(check_val, function (index, id) {
+          $.ajax({
+            type: 'POST',
+            url: HOST_URL + 'departschangestate',
+            data: {deid: id, deexist: 0},
+            dataType: 'json',
+            async: false, //将ajax改为同步
+            headers: createAuthorizationTokenHeader(),
+            success: function (data) {
+              var dy = $("#de" + id);
+              if (data.result == 1) {
+                $(dy).find(".td-manage").find("a:first").remove();
+                $(dy).find(".td-manage").prepend('<a style="text-decoration:none" onClick="drug_start(this,' + id + ')" href="javascript:;" title="启用"><i class="Hui-iconfont">&#xe66b;</i></a>');
+                $(dy).find(".td-status").html('<span class="label label-defaunt radius">已停用</span>');
+              } else {
+                i++;
+              }
+            },
+          });
+        });
+        if (i == 0)
+          layer.msg('批量停用完成!', {icon: 4, time: 1200});
+        else
+          layer.msg('存在可用医生的科室未停用!', {icon: 7, time: 1800});
+      }
+    });
+  }
+
+  /*科室-停用*/
+  function drug_stop(obj, id) {
+    layer.confirm('确认要停用吗?', function (index) {
+      $.ajax({
+        type: 'POST',
+        url: HOST_URL + 'departschangestate',
+        data: {deid: id, deexist: 0},
+        dataType: 'json',
+        headers: createAuthorizationTokenHeader(),
+        success: function (data) {
+          if (data.result == 1) {
+            $(obj).parents("tr").find(".td-manage").prepend('<a style="text-decoration:none" onClick="drug_start(this,' + id + ')" href="javascript:;" title="启用"><i class="Hui-iconfont">&#xe66b;</i></a>');
+            $(obj).parents("tr").find(".td-status").html('<span class="label label-defaunt radius">已停用</span>');
+            $(obj).remove();
+            layer.msg('已停用!', {icon: 5, time: 1000});
+          } else {
+            layer.msg('该科室存在医生,不能停用!', {icon: 2, time: 1200});
+          }
+        },
+        error: function (data) {
+          console.log(data);
+        },
+      });
+      layer.close(index);
+    });
+  }
+
+  //批量启用
+  function deps_start() {
+    var obj = document.getElementsByName("deid");
+    var check_val = [];
+    for (k in obj) {
+      if (obj[k].checked)
+        check_val.push(obj[k].value);
+    }
+    layer.confirm('确认要批量启用吗？', function (index) {
+      if (check_val.length < 1) {
+        layer.tips('  请至少选中一行进行批量操作！  ', '#allcheck', {
+          tips: [1, '#E65']
+        });
+      } else {
+        $.each(check_val, function (index, id) {
+          $.ajax({
+            type: 'POST',
+            url: HOST_URL + 'departschangestate',
+            data: {deid: id, deexist: 1},
+            headers: createAuthorizationTokenHeader(),
+            dataType: 'json',
+            success: function (data) {
+              var dy = $("#de" + id);
+              $(dy).find(".td-manage").find("a:first").remove();
+              $(dy).find(".td-manage").prepend('<a style="text-decoration:none" onClick="drug_stop(this,' + id + ')" href="javascript:;" title="停用"><i class="Hui-iconfont">&#xe631;</i></a>');
+              $(dy).find(".td-status").html('<span class="label label-success radius">已启用</span>');
+
+            },
+          });
+        });
+        layer.msg('批量启用完成!', {icon: 6, time: 1200});
+      }
+    });
+  }
+
+  /*科室-启用*/
+  function drug_start(obj, id) {
+    layer.confirm('确认要启用吗？', function (index) {
+      $.ajax({
+        type: 'POST',
+        url: HOST_URL + 'departschangestate',
+        data: {deid: id, deexist: 1},
+        dataType: 'json',
+        headers: createAuthorizationTokenHeader(),
+        success: function (data) {
+          $(obj).parents("tr").find(".td-manage").prepend('<a style="text-decoration:none" onClick="drug_stop(this,' + id + ')" href="javascript:;" title="停用"><i class="Hui-iconfont">&#xe631;</i></a>');
+          $(obj).parents("tr").find(".td-status").html('<span class="label label-success radius">已启用</span>');
+          $(obj).remove();
+          layer.msg('已启用!', {icon: 6, time: 1000});
+        },
+        error: function (data) {
+          console.log(data);
+        },
+      });
+    });
+  }
+
+</script>
+</body>
+</html>

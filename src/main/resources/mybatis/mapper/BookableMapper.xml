@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper SYSTEM "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!-- @author SONG -->
+<mapper namespace="com.hospital.registration.mapper.BookableMapper">
+
+  <resultMap type="com.hospital.registration.domain.WeekBean" id="week-result">
+    <id property="doid" column="doid"/>
+    <id property="time" column="time"/>
+    <result property="doname" column="doname"/>
+    <result property="reg1" column="reg1"/>
+    <result property="reg2" column="reg2"/>
+    <result property="reg3" column="reg3"/>
+    <result property="reg4" column="reg4"/>
+    <result property="reg5" column="reg5"/>
+    <result property="reg6" column="reg6"/>
+    <result property="reg7" column="reg7"/>
+  </resultMap>
+
+  <select id="findBK" resultMap="week-result">
+    select distinct do.doid,do.doname,
+    <foreach collection="bklist" separator="," item="item" index="index">
+      (select if(count(*)=0,' ','值班坐诊') from BOOKABLE where doid = do.doid and starttime = -1 and
+      date_format(bdate,'%Y-%m-%d')=#{item}) areg${index+1},
+      (select if(count(*)=0,' ','值班坐诊') from BOOKABLE where doid = do.doid and starttime = 1 and
+      date_format(bdate,'%Y-%m-%d')=#{item}) preg${index+1}
+    </foreach>
+    from doctors do left join bookable b on b.doid = do.doid where do.deid = #{deid} and do.doexist =1
+  </select>
+</mapper>

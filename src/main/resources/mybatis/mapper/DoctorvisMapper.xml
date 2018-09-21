@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @author SONG -->
+<mapper namespace="com.hospital.registration.mapper.DoctorvisMapper">
+
+  <resultMap type="com.hospital.registration.domain.Registration" id="result_registration">
+    <id column="rid" property="rid"/>
+    <result column="snum" property="snum"/>
+    <result column="state" property="state"/>
+
+    <association property="cards" javaType="com.hospital.registration.domain.Cards">
+      <id column="cid" property="cid"/>
+      <result column="pname" property="pname"/>
+      <result column="gender" property="gender"/>
+
+    </association>
+    <association property="bookable" javaType="com.hospital.registration.domain.Bookable">
+      <id column="bid" property="bid"/>
+      <result column="bdate" property="bdate"/>
+    </association>
+  </resultMap>
+
+  <!-- 查询某医生的挂号单 -->
+  <select id="findRegistrationByDoic" resultMap="result_registration">
+    select r.rid,r.cid,r.bid,r.snum,r.state,c.pname,c.gender,b.bdate from registration r , bookable b ,cards c
+    where r.bid=b.bid and c.cid=r.cid and
+    b.DOID=#{doid} and to_days(b.bdate) = to_days(now()) and state > 0
+  </select>
+
+  <!-- 查看病人本部门历史病历 -->
+  <resultMap type="com.hospital.registration.domain.History" id="result-history">
+    <id column="hiid" property="hiid"/>
+    <result column="hidate" property="hidate"/>
+    <result column="deal" property="deal"/>
+    <result column="brief" property="brief"/>
+
+    <association property="doctors" javaType="com.hospital.registration.domain.Doctors">
+      <id column="doid" property="doid"/>
+      <result column="doname" property="doname"/>
+      <result column="title" property="title"/>
+    </association>
+
+    <association property="cards" javaType="com.hospital.registration.domain.Cards">
+      <id column="cid" property="cid"/>
+      <result column="pname" property="pname"/>
+      <result column="gender" property="gender"/>
+    </association>
+
+    <association property="prescripton" javaType="com.hospital.registration.domain.Prescripton">
+      <id column="prid" property="prid"/>
+    </association>
+  </resultMap>
+
+  <select id="findHistory" resultMap="result-history">
+    select h.hiid,h.brief,h.deal,c.pname,c.gender,d.doname,d.title,h.prid,h.hidate,d.doid,c.cid
+    from history h,doctors d ,cards c
+    where h.doid= d.doid and c.cid=h.cid and c.cid =#{cid}
+
+    <if test="beginDate != null and endDate != null">
+      and h.hidate BETWEEN #{beginDate} and #{endDate}
+    </if>
+  </select>
+
+  <!-- 查询药品 部门和数量 -->
+  <resultMap type="com.hospital.registration.domain.Druganddeparts" id="result-drugand">
+    <id column="drid" property="drid"/>
+    <id column="deid" property="deid"/>
+    <association property="drug" javaType="com.hospital.registration.domain.Drug">
+      <id column="drid" property="drid"/>
+      <result column="drname" property="drname"/>
+      <result column="drprice" property="drprice"/>
+      <result column="drsum" property="drsum"/>
+      <association property="drugtype" javaType="com.hospital.registration.domain.Drugtype">
+        <result column="dyid" property="dyid"/>
+        <result column="dyname" property="dyname"/>
+      </association>
+    </association>
+    <association property="departs" javaType="com.hospital.registration.domain.Departs">
+      <id column="deid" property="deid"/>
+    </association>
+  </resultMap>
+
+  <select id="getDrug" resultMap="result-drugand">
+    select dr.drid, de.deid ,dr.drname,dr.drprice,dr.drsum ,dy.dyid,dy.dyname from
+    druganddeparts d ,drug dr ,departs de ,drugtype dy
+    where d.drid=dr.drid and d.deid=de.deid and dy.dyid=dr.dyid
+    and d.deid=#{deid} and dr.drstate=1
+
+    <if test="price1 != null">and dr.drprice &gt;= #{price1}</if>
+    <if test="price2 != null">and dr.drprice &lt;= #{price2}</if>
+  </select>
+
+  <!-- 查看药方项 -->
+  <resultMap type="com.hospital.registration.domain.Drugandprescripton" id="result-drugandprescripton">
+    <id column="prid" property="prid"/>
+    <id column="drid" property="drid"/>
+    <result column="drnum" property="drnum"/>
+
+    <association property="prescripton" javaType="com.hospital.registration.domain.Prescripton">
+      <id column="prid" property="prid"/>
+    </association>
+
+    <association property="drug" javaType="com.hospital.registration.domain.Drug">
+      <id column="drid" property="drid"/>
+      <result column="drname" property="drname"/>
+      <result column="drprice" property="drprice"/>
+
+      <association property="drugtype" javaType="com.hospital.registration.domain.Drugtype">
+        <id column="dyid" property="dyid"/>
+        <result column="dyname" property="dyname"/>
+      </association>
+    </association>
+  </resultMap>
+
+  <select id="findDrug" resultMap="result-drugandprescripton">
+    select dp.prid,dp.drnum,dr.drid, dr.drname,dr.drprice,dy.dyname,dy.dyid
+    from drugandprescripton dp , drug dr ,prescripton p ,drugtype dy
+    where dp.drid=dr.drid  and p.prid=dp.prid and dy.dyid=dr.dyid and p.prid =#{prid}
+  </select>
+</mapper>

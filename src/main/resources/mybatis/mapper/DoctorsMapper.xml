@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @author SONG -->
+<mapper namespace="com.hospital.registration.mapper.DoctorsMapper">
+
+  <resultMap type="com.hospital.registration.domain.Doctors" id="doctors-result">
+    <id property="doid" column="doid"/>
+    <result property="doname" column="doname"/>
+    <result property="title" column="title"/>
+    <result property="doexist" column="doexist"/>
+    <result property="bcost" column="bcost"/>
+    <result property="info" column="info"/>
+    <result property="aname" column="aname"/>
+    <result property="pcreg" column="pcreg"/>
+    <result property="xcreg" column="xcreg"/>
+    <result property="monam" column="monam"/>
+    <result property="monpm" column="monpm"/>
+    <result property="tueam" column="tueam"/>
+    <result property="tuepm" column="tuepm"/>
+    <result property="wedam" column="wedam"/>
+    <result property="wedpm" column="wedpm"/>
+    <result property="thuam" column="thuam"/>
+    <result property="thupm" column="thupm"/>
+    <result property="friam" column="friam"/>
+    <result property="fripm" column="fripm"/>
+    <result property="satam" column="satam"/>
+    <result property="satpm" column="satpm"/>
+    <result property="sunap" column="sunap"/>
+    <result property="sumpm" column="sumpm"/>
+
+    <association property="departs" column="deid" javaType="com.hospital.registration.domain.Departs">
+      <id property="deid" column="deid"/>
+      <result property="dename" column="dename"/>
+      <result property="deexist" column="deexist"/>
+    </association>
+  </resultMap>
+
+  <select id="find" resultMap="doctors-result">
+		select do.doid,do.doname,do.info,a.aname,do.title,do.doexist,bcost,pcreg,xcreg,de.dename from  
+    	   doctors do left outer join departs de on do.deid=de.deid left join admins a on a.doid = do.doid
+	</select>
+</mapper>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>301医院门诊管理系统</title>
+  <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="static/h-ui.admin/css/style.css">
+</head>
+<body>
+<form class="form form-horizontal" id="form-admin-add">
+  <article class="page-container">
+    <br>
+
+    <!--
+    <div class="row cl">
+      <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>原始密码:</label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="password" class="input-text" value="" placeholder="原始密码" id="pwd" name="pwd" style="width:240px;">
+      </div>
+    </div>
+    -->
+
+    <div class="row cl">
+      <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>新的密码:</label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="password" class="input-text" autocomplete="off" value="" placeholder="新密码" id="password"
+               name="password" style="width:240px;">
+      </div>
+    </div>
+    <div class="row cl">
+      <label class="form-label col-xs-4 col-sm-3"><span class="c-red">*</span>确认新密码:</label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="password" class="input-text" autocomplete="off" placeholder="确认新密码" id="password2" name="password2"
+               style="width:240px;">
+      </div>
+    </div>
+    <div class="row cl">
+      <div class="col-xs-8 col-sm-9 col-xs-offset-4 col-sm-offset-3">
+        <input class="btn btn-primary " type="submit" value="&nbsp;&nbsp;保存&nbsp;&nbsp;">
+      </div>
+    </div>
+  </article>
+</form>
+
+<script src="js/jquery-3.3.1.min.js"></script>
+<script src="static/h-ui/js/H-ui.min.js"></script>
+<script src="static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="static/layer/2.4/layer.js"></script>
+
+<script src="js/jquery.validation/jquery.validate.js"></script>
+<script src="js/jquery.validation/validate-methods.js"></script>
+<script src="js/jquery.validation/messages_zh.js"></script>
+
+<script src="js/hospital.js"></script>
+
+<script>
+  $(window).on('load', () => {
+    $('.skin-minimal input').iCheck({
+      checkboxClass: 'icheckbox-blue',
+      radioClass: 'iradio-blue',
+      increaseArea: '20%'
+    });
+
+    $("#form-admin-add").validate({
+      rules: {
+        pwd: {
+          required: true,
+        },
+        password: {
+          required: true,
+          minlength: 6,
+          maxlength: 16
+
+        },
+        password2: {
+          required: true,
+          equalTo: "#password"
+        },
+      },
+      onkeyup: false,
+      focusCleanup: true,
+      success: "valid",
+      submitHandler: function (form) {
+        $(form).ajaxSubmit({
+          type: 'post',
+          url: HOST_URL + "changepwd",
+          dataType: "json",
+          headers: createAuthorizationTokenHeader(),
+          success: function (data) {
+            if (data.username) {
+              layer.msg('修改成功!', {icon: 1, time: 1000})
+              var index = parent.layer.getFrameIndex(window.name)
+              setTimeout(function () {
+                parent.layer.close(index);
+              }, 700)
+            }
+          },
+          error: function (XmlHttpRequest, textStatus, errorThrown) {
+            layer.msg('网络错误', {icon: 1, time: 1000});
+          }
+        });
+        /* 			var index = parent.layer.getFrameIndex(window.name);
+              parent.$('.btn-refresh').click();
+              parent.layer.close(index); */
+      }
+    });
+  });
+</script>
+</body>
+</html>

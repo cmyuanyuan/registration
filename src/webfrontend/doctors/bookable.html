@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统 医生坐诊排班</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb"><i class="Hui-iconfont">&#xe67f;</i> 首页 <span class="c-gray en">&gt;</span> 排班管理 <span
+        class="c-gray en">&gt;</span> 医生坐诊排班 <a class="btn btn-success radius r"
+                                                style="line-height:1.6em;margin-top:3px"
+                                                href="javascript:location.replace(location.href);" title="刷新"><i
+        class="Hui-iconfont">&#xe68f;</i></a></nav>
+<div class="page-container">
+  <div class="text-c">
+    选择科室：
+    <span class="select-box inline">
+		<select name="deid" class="select" id="deid">
+
+		</select>
+		</span> &nbsp;&nbsp;&nbsp;&nbsp;选择排班周：
+    <input type="text" id="datetime" class="input-text" style="width:120px" name="datetime">
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <button name="" id="" class="btn btn-success" type="button" onclick="loadBK()"><i class="Hui-iconfont">&#xe665;</i>
+      查询排班
+    </button>
+    <a class="btn btn-primary radius" data-title="自动排班" data-href="javascript:autoBK();" href="javascript:autoBK();">
+      <i class="Hui-iconfont">&#xe600;</i> 自动排班</a>
+  </div>
+  <div class="cl pd-5 bg-1 bk-gray mt-20"> <span class="l"><a href="javascript:delBK();" class="btn btn-danger radius">
+	<i class="Hui-iconfont">&#xe6e2;</i> 删除该周排班</a> </span></div>
+  <div class="mt-20">
+    <table class="table table-border table-bordered table-bg table-hover table-sort table-responsive">
+      <thead>
+
+      </thead>
+      <tfoot>
+
+      </tfoot>
+      <tbody>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2017-2027 SONG.net All Rights Reserved.
+  </div>
+</footer>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/WdatePicker/WdatePicker.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+<script src="../static/laydate/laydate.js"></script>
+<script src="../js/hospital.js"></script>
+<script>
+  $(window).on('load', () => {
+    var now = new Date()
+    var year = now.getFullYear()
+    var month = now.getMonth() + 1;// 从 0 开始; 0 是一月
+    month = (month < 10) ? "0" + month : month
+    var date = now.getDate()
+    $("#datetime").val(year + "-" + month + "-" + date)
+
+    //执行一个laydate实例
+    laydate.render({
+      elem: '#datetime', //指定元素
+    });
+
+    // 可用科室
+    $.ajax({
+      url: HOST_URL + "departsdeexist",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data) {
+        var text = ``
+        $.each(data, (i, item) => {
+          text += `<option value="${item.deid}">${item.dename}</option>`
+        })
+        $("#deid").append(text)
+
+        // 默认加载今日的排班
+        loadBK()
+      }
+    })
+
+  })
+
+  // 查询指定日的排班
+  function loadBK() {
+    $.ajax({
+      url: HOST_URL + "bookabledepartdoctor",
+      data: {deid: $("#deid").val(), datetime: $("#datetime").val()},
+      type: "post",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data) {
+        console.log(data)
+        if (data) {
+          $("thead").empty()
+          $("tfoot").empty()
+          $("tbody").empty()
+        }
+
+        $("#deid").val(data.deid)
+        $("#datetime").val(data.datetime)
+
+        var thText = `
+        <tr class="text-c">
+            <th width="40">ID</th>
+            <th width="60">医生姓名</th>
+            <th width="40">时段</th>
+        `
+        // 加载星期
+        $.each(data.weekList, (i, item) => {
+          thText += `
+            <th width="80">${item}</th>
+          `
+        })
+        $("thead").append(thText + `</tr>`)
+        $("tfoot").append(thText + `</tr>`)
+
+        var text = ``
+        // 加载医生排班
+        $.each(data.weekBeanList, (i, item) => {
+          // 上午
+          var amspanClass1 = `label label-defaunt radius`
+          if (item.areg1 == '值班坐诊') {
+            amspanClass1 = `label label-danger radius`
+          }
+          var amspanClass2 = `label label-defaunt radius`
+          if (item.areg2 == '值班坐诊') {
+            amspanClass2 = `label label-danger radius`
+          }
+          var amspanClass3 = `label label-defaunt radius`
+          if (item.areg3 == '值班坐诊') {
+            amspanClass3 = `label label-danger radius`
+          }
+          var amspanClass4 = `label label-defaunt radius`
+          if (item.areg4 == '值班坐诊') {
+            amspanClass4 = `label label-danger radius`
+          }
+          var amspanClass5 = `label label-defaunt radius`
+          if (item.areg5 == '值班坐诊') {
+            amspanClass5 = `label label-danger radius`
+          }
+          var amspanClass6 = `label label-defaunt radius`
+          if (item.areg6 == '值班坐诊') {
+            amspanClass6 = `label label-danger radius`
+          }
+          var amspanClass7 = `label label-defaunt radius`
+          if (item.areg7 == '值班坐诊') {
+            amspanClass7 = `label label-danger radius`
+          }
+
+          // 下午
+          var pmspanClass1 = `label label-defaunt radius`
+          if (item.preg1 == '值班坐诊') {
+            pmspanClass1 = `label label-danger radius`
+          }
+          var pmspanClass2 = `label label-defaunt radius`
+          if (item.preg2 == '值班坐诊') {
+            pmspanClass2 = `label label-danger radius`
+          }
+          var pmspanClass3 = `label label-defaunt radius`
+          if (item.preg3 == '值班坐诊') {
+            pmspanClass3 = `label label-danger radius`
+          }
+          var pmspanClass4 = `label label-defaunt radius`
+          if (item.preg4 == '值班坐诊') {
+            pmspanClass4 = `label label-danger radius`
+          }
+          var pmspanClass5 = `label label-defaunt radius`
+          if (item.preg5 == '值班坐诊') {
+            pmspanClass5 = `label label-danger radius`
+          }
+          var pmspanClass6 = `label label-defaunt radius`
+          if (item.preg6 == '值班坐诊') {
+            pmspanClass6 = `label label-danger radius`
+          }
+          var pmspanClass7 = `label label-defaunt radius`
+          if (item.preg7 == '值班坐诊') {
+            pmspanClass7 = `label label-danger radius`
+          }
+
+          text += `
+          <tr class="text-c">
+            <td rowspan=2>${item.doid}</td>
+            <td rowspan=2>${item.doname}</td>
+            <td>上午</td>
+            <td class="td-status"><span class="${amspanClass1}">${item.areg1 }</span></td>
+            <td class="td-status"><span class="${amspanClass2}">${item.areg2 }</span></td>
+            <td class="td-status"><span class="${amspanClass3}">${item.areg3 }</span></td>
+            <td class="td-status"><span class="${amspanClass4}">${item.areg4 }</span></td>
+            <td class="td-status"><span class="${amspanClass5}">${item.areg5 }</span></td>
+            <td class="td-status"><span class="${amspanClass6}">${item.areg6 }</span></td>
+            <td class="td-status"><span class="${amspanClass7}">${item.areg7 }</span></td>
+          </tr>
+          <tr class="text-c">
+            <td hidden>${item.doid}</td>
+            <td hidden>${item.doname}</td>
+            <td>下午</td>
+            <td class="td-status"><span class="${pmspanClass1}">${item.preg1 }</span></td>
+            <td class="td-status"><span class="${pmspanClass2}">${item.preg2 }</span></td>
+            <td class="td-status"><span class="${pmspanClass3}">${item.preg3 }</span></td>
+            <td class="td-status"><span class="${pmspanClass4}">${item.preg4 }</span></td>
+            <td class="td-status"><span class="${pmspanClass5}">${item.preg5 }</span></td>
+            <td class="td-status"><span class="${pmspanClass6}">${item.preg6 }</span></td>
+            <td class="td-status"><span class="${pmspanClass7}">${item.preg7 }</span></td>
+          </tr>
+          `
+        })
+        $("tbody").append(text)
+
+        $('.table-sort').DataTable({
+          language: {
+            url: "../js/zh_CN.txt"
+          },
+          retrieve: true, // Cannot reinitialise DataTable
+        })
+      }
+    })
+  }
+
+  //自动排班
+  function autoBK() {
+    var deid = $("#deid").val();
+    var datetime = $("#datetime").val();
+    $.ajax({
+      url: HOST_URL + 'bookablealldoctor',
+      data: {"deid": deid, "datetime": datetime},
+      type: "post",
+      dataType: 'json',
+      headers: createAuthorizationTokenHeader(),
+      success: function (data) {
+        if (data.result == 1) {
+          layer.msg('该科室所选周已排班!', {
+            skin: 'layui-layer-lan'
+            , closeBtn: 0
+            , anim: 4 //动画类型
+          }, function () {
+            loadBK()
+          });
+        } else {
+          layer.msg('排班完毕!', {
+            skin: 'layui-layer-lan'
+            , closeBtn: 0
+            , anim: 10 //动画类型
+          }, function () {
+            $.ajax({
+              url: HOST_URL + 'bookableadd',
+              data: {"deid": deid, "datetime": datetime},
+              type: "post",
+              dataType: 'json',
+              headers: createAuthorizationTokenHeader(),
+              success: function (data) {
+                loadBK()
+              }
+            })
+          });
+        }
+      }
+    });
+  }
+
+  //删除
+  function delBK() {
+    var doid = $("table tr:eq(1) > td:eq(0)").text();//第二行第一列 --医生id
+    var datetime = $("table tr:eq(0) > th:eq(3)").text().split(' ')[0]; //排班时间
+    if (doid != '' && doid != "没有数据") {
+      layer.confirm('是否确定要删除？',
+          function () {
+            layer.closeAll('dialog');
+            $.ajax({
+              url: HOST_URL + 'bookabledelete',
+              data: {"doid": doid, "datetime": datetime},
+              type: "post",
+              dataType: 'json',
+              headers: createAuthorizationTokenHeader(),
+              success: function (data) {
+                if (data.result == -1) { // before
+                  layer.msg('已上线排班无法删除!', {
+                    skin: 'layui-layer-molv'
+                    , closeBtn: 0
+                    , anim: 1
+                  });
+                } else if (data.result > 0) { // after
+                  var deid = data.result;
+                  layer.msg('删除成功!', {
+                    skin: 'layui-layer-molv'
+                    , closeBtn: 0
+                    , anim: 1
+                  }, function () {
+                    $("#deid").val(deid)
+                    loadBK()
+                  });
+                } else { // center
+                  var deid = data.result;
+                  layer.msg('此周排班表中存在已上线信息,无法删除.未上线部分已更新!', {
+                    skin: 'layui-layer-molv'
+                    , closeBtn: 0
+                    , anim: 1
+                  }, function () {
+                    $("#deid").val(deid)
+                    loadBK()
+                  });
+                }
+              }
+            });
+
+          });
+    } else {
+      layer.msg('没有排班信息,无法删除!', {icon: 5, time: 1200});
+    }
+  }
+</script>
+</body>
+</html>

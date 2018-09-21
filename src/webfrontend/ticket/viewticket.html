@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta http-equiv="Cache-Control" content="no-siteapp"/>
+  <title>301医院门诊管理系统 票号生成</title>
+  <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb">
+  <i class="Hui-iconfont">&#xe67f;</i><span class="c-gray en">&gt;</span>
+  挂号管理 <span class="c-gray en">&gt;</span> 取票扣费 <a
+        class="btn btn-success radius r"
+        style="line-height:1.6em;margin-top:3px"
+        href="javascript:location.replace(location.href);" title="刷新"><i
+        class="Hui-iconfont">&#xe68f;</i></a>
+</nav>
+<table class="table table-border table-bordered table-bg">
+  <thead>
+  <tr>
+    <th scope="col" colspan="9">票单基本信息</th>
+  </tr>
+  <tr class="text-c">
+    <th width="80">票号</th>
+    <th width="80">就诊人</th>
+    <th width="90">医生</th>
+    <th width="80">科室</th>
+    <th width="80">挂号费</th>
+    <th width="200">诊疗卡号</th>
+  </tr>
+  </thead>
+
+  <tbody>
+
+  </tbody>
+</table>
+<div class="page-container">
+  <form class="form form-horizontal" id="form-ticket-add" method="post">
+    <div class="row cl">
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="hidden" class="input-text" placeholder="" id="bid" name="bid">
+        <input type="hidden" class="input-text" placeholder="" id="medcard" name="medcard">
+        <!-- 现场取号,非来自网络-->
+        <input type="hidden" class="input-text" placeholder="" id="red" name="red" value="-1">
+      </div>
+    </div>
+    <div class="row cl">
+      <label class="form-label col-xs-4 col-sm-3" style="padding-left:84px;">应付金额:</label>
+
+      <input type="text" readonly size="4" style="border-style:none;color:blue;font-weight:bold"
+             id="bcost" name="bcost">
+      <input type="text" value="元" readonly size="4" style="border-style:none">
+    </div>
+
+    <div class="row cl">
+      <label class="form-label col-xs-4 col-sm-3" style="padding-left:78px;"><span class="c-red">*</span>付费方式:</label>
+      <div class="formControls col-xs-8 col-sm-9 skin-minimal" style="padding-left:0px;">
+        <div class="radio-box" style="padding-left:0px;">
+          <input name="starttime" type="radio" id="card-1" checked value="1">
+          <label for="card-1" style="padding-left: 21px;">诊疗卡</label>
+        </div>
+        <div class="radio-box" style="padding-left:0px;">
+          <input type="radio" id="card-2" name="starttime" value="0">
+          <label for="card-2" style="padding-left: 21px;">现金</label>
+        </div>
+      </div>
+    </div>
+    <div class="row cl">
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="hidden" class="input-text" placeholder="" id="snum" name="snum">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <div class="col-xs-8 col-sm-9 col-xs-offset-4 col-sm-offset-3">
+        <input class="btn btn-primary radius" type="submit" value="&nbsp;&nbsp;确定&nbsp;&nbsp;">
+      </div>
+    </div>
+  </form>
+</div>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/WdatePicker/WdatePicker.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+
+<script src="../js/jquery.validation/jquery.validate.js"></script>
+<script src="../js/jquery.validation/validate-methods.js"></script>
+<script src="../js/jquery.validation/messages_zh.js"></script>
+<script src="../js/hospital.js"></script>
+<script>
+  $(window).on('load', () => {
+    var formData = $.parseJSON(localStorage.getItem("formData"))
+    localStorage.removeItem("formData")
+    var snum = localStorage.getItem("snum")
+    localStorage.removeItem("snum")
+    var pname = localStorage.getItem("pname")
+    localStorage.removeItem("pname")
+
+    var text = `
+    <tr class="text-c">
+      <td>${snum}</td>
+      <td>${pname}</td>
+      <td>${formData.doname}</td>
+      <td>${formData.dename}</td>
+      <td>${formData.bcost}</td>
+      <td>${formData.medcard}</td>
+    </tr>
+    `
+    $("tbody").append(text)
+
+    $("#bcost").val(formData.bcost)
+    $("#bid").val(formData.bid)
+    $("#medcard").val(formData.medcard)
+    $("#snum").val(snum)
+
+    $('.skin-minimal input').iCheck({
+      checkboxClass: 'icheckbox-blue',
+      radioClass: 'iradio-blue',
+      increaseArea: '20%'
+    })
+
+    $("#form-ticket-add").validate({
+      onkeyup: false,
+      focusCleanup: true,
+      success: "valid",
+      submitHandler: function (form) {
+        var choice = $("input[name='starttime']:checked").val();
+        var cost = $("#bcost").val();
+        if (choice == 1) {
+          var str = "是否确认扣取诊疗卡余额"
+        } else {
+          var str = '请确认收取现金 ' + cost + ' 元';
+        }
+        layer.confirm(str, function () {
+          $.ajax({
+            url: HOST_URL + "booksgetticket",
+            type: "post",
+            data: JSON.stringify(getFormData($(form))),
+            dataType: "json",
+            contentType: "application/json;charset=utf-8",
+            headers: createAuthorizationTokenHeader(),
+            success: function (data) {
+              if (data.result == 1) {
+                layer.msg('挂号成功！', {icon: 1, time: 1000});
+                var index = parent.layer.getFrameIndex(window.name);
+                setTimeout(function () {
+                  window.parent.location.reload();
+                  parent.layer.close(index);
+                }, 700);
+
+              } else if (data.result == -1) {
+                layer.alert("余额不足请提醒充值！", {
+                  closeBtn: 0
+                  , anim: 3
+                });
+              }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+              console.log("Spring exception:", jqXHR.responseJSON.exception)
+              layer.alert("系统出现错误，请联系管理员")
+            }
+          })
+        })
+      }
+    })
+
+  })
+</script>
+</body>
+</html>

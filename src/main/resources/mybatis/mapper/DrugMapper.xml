@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @author SONG -->
+<mapper namespace="com.hospital.registration.mapper.DrugMapper">
+  <resultMap type="com.hospital.registration.domain.Drug" id="drug-result">
+    <id property="drid" column="drid"/>
+    <result property="drname" column="drname"/>
+    <result property="drsum" column="drsum"/>
+    <result property="drprice" column="drprice"/>
+    <result property="drstate" column="drstate"/>
+    <result property="dename" column="dename"/>
+    <result property="dyid" column="dyid"/>
+    <!-- 多对一映射 药品类型 -->
+    <association property="drugtype" javaType="com.hospital.registration.domain.Drugtype">
+      <id property="dyid" column="dyid"/>
+      <result property="dyname" column="dyname"/>
+      <result property="dystate" column="dystate"/>
+    </association>
+  </resultMap>
+
+  <!-- group_concat() 行转列函数-->
+  <select id="findDrugs" resultMap="drug-result">
+    select dy.drid,drname,drsum,drprice,drstate,dyname, group_concat(dename) dename
+    from (select drid,d.dyid,drname,drsum,drprice,drstate,dyname,dystate from DRUG d,drugtype y where d.dyid = y.dyid)dy
+    left join (select drid,r.deid,dename,intro,deexist from DRUGANDDEPARTS r,DEPARTS e where r.deid = e.deid )re on
+    dy.drid = re.drid
+    <where>
+      1 = 1
+      <if test="price1 != null">and drprice &gt;= #{price1}</if>
+      <if test="price2 != null">and drprice &lt;= #{price2}</if>
+      group by dy.drid,drname,drsum,drprice,drstate,dyname
+    </where>
+  </select>
+</mapper>
